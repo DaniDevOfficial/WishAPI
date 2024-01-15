@@ -118,4 +118,50 @@ Z. 97: res.status(401).send('Ungültige Anmeldeinformationen');
 ````
 Hier sind alle Responses die Eine Fehlermeldung zurückgeben. Beim Lesen dieser Returns wird schnell klar, dass es zwar ungefähr sagt was falsch ist, jedoch wird so wage wie möglich formuliert, was passiert ist, sodass ein Person mit schlechten intentionen nicht genau weiss, was er bei seinem z.B. Hack fixen muss, sodass er funktioniert. Wenn wir bei Z. 80 genau sagen würden, was falsch ist, kann man schnell Accounts finden, welche existieren und dies Solten wir als Besitzer vermeiden. Was das ganze hauptsächlich macht, ist dass das Hacken oder schlechten verwenden der API sehr erschwert wird. 
 
+
 ### 2.5 Logging und Monitoring
+
+Mit Logging und Monitoring kann man erkennen, wenn jemand zum beispiel sich mit einer Brute-Force attake versucht sicht in einen Account einzuloggen. Jeden einzelnen Loggin Attempt würde man im Log file dann sehen. 
+
+Die WishAPI hat folgende Logging Methode: 
+````javascript
+const logToFile = (data) => {
+    fs.appendFile('log.txt', `${new Date().toISOString()}: ${data}\n`, (err) => {
+        if (err) {
+            console.error('Fehler beim Schreiben des Logs:', err);
+        }
+    });
+};
+````
+Diese Logging funktion funktioniert darüber, dass beim aufrufen ein Text als Parameter mitgegeben wird, sodass dies dan Geloggt werden kann. Wenn man ein wenig mit der API rumspielt kann man sehr schnell ein Log-File entdecken, welches alle ativitäten der Nutzer Loggt. 
+
+
+### 2.6 Cross-Origin Resource Sharing (CORS)
+
+Um die API gegen unerlaubten Zugriff von verschiedenen Domänen zu schützen, wurde Cross-Origin Resource Sharing (CORS) implementiert. Die API erlaubt nur Anfragen von vordefinierten, vertrauenswürdigen Domänen. In diesem Beispiel ist nur der Zugriff von der Domäne 'https://david-bischof.ch' erlaubt.
+
+```javascript
+
+const allowedOrigins = ['https://david-bischof.ch'];
+
+const corsOptions = {
+    origin: function (origin, callback) {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Unerlaubter Zugriff von der angegebenen Domäne.'));
+        }
+    },
+    optionsSuccessStatus: 200,
+};
+
+app.use(cors(corsOptions));
+```
+
+Die `allowedOrigins` Liste enthält die Domänen, die berechtigt sind, auf die API zuzugreifen. Jede Anfrage von einer nicht autorisierten Domäne wird blockiert und mit einer Fehlermeldung zurückgegeben. Dies trägt dazu bei, dass die API vor unerwünschten CORS-Anfragen geschützt ist und nur vertrauenswürdigen Quellen den Zugriff gestattet.
+
+Um dies zu Testen kann man auf: https://david-bischof.ch/apitest sehen, dass die API dort etwas zurückgibt. Auf: https://portfolio-dbischof.web.app/apitest kann man nichts sehen, da diese Domaine nicht auf der Allowed List ist.
+
+## 3. Testing
+
+Hierfür wird Postman benötigt und die API muss am laufen sein. 
