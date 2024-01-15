@@ -3,13 +3,13 @@ const bodyParser = require('body-parser');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const rateLimit = require('express-rate-limit');
+const fs = require('fs');
+const cors = require('cors');
 
 const app = express();
 const port = 3000;
-const secretKey = 'MeinGeheimesSchluesselwort'; // sollte aus einer Umgebungsvariable kommen
+const secretKey = 'MeinGeheimesSchluesselwort';
 const saltRounds = 10;
-const cors = require('cors');
-
 // Benutzerdaten (normalerweise in einer Datenbank gespeichert)
 const users = [
     { id: 1, username: 'admin', hashedPassword: '', role: 'admin' },
@@ -17,8 +17,6 @@ const users = [
 ];
 
 const allowedOrigins = ['https://david-bischof.ch'];
-// https://portfolio-dbischof.web.app/apitest hier funktioniert es nicht, da es nicht in der Liste der erlaubten Domänen ist
-// https://david-bischof.ch/apitest hier funktioniert es, da es in der Liste der erlaubten Domänen ist
 const corsOptions = {
     origin: function (origin, callback) {
         if (!origin || allowedOrigins.includes(origin)) {
@@ -28,22 +26,18 @@ const corsOptions = {
         }
     },
     optionsSuccessStatus: 200,
-
 };
 
 app.use(cors(corsOptions));
 
-
-
 const apiLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 Minuten
-    max: 100, // Maximal 100 Anfragen für die gesamte API innerhalb des Zeitraums
+    windowMs: 15 * 60 * 1000,
+    max: 100,
     message: 'Zu viele Anfragen von dieser IP, bitte versuchen Sie es später erneut.',
 });
 
 app.use(apiLimiter);
 
-// Middleware für die Authentifizierung
 const authenticateToken = (req, res, next) => {
     const token = req.header('Authorization');
     if (!token) return res.status(401).send('Fehlende Berechtigung');
@@ -55,17 +49,25 @@ const authenticateToken = (req, res, next) => {
     });
 };
 
-// Hashen des Passworts hier für jeden user das selbe Passwort (real in der Datenbank gespeichert)
 users.forEach(user => {
     bcrypt.hash('admin123', saltRounds, (err, hash) => {
         if (!err) user.hashedPassword = hash;
     });
 });
 
-// Einfache Eingabevalidierung für Benutzername und Passwort
 const isValidInput = (input) => /^[a-zA-Z0-9]+$/.test(input);
 
+// Logging-Funktion
+const logToFile = (data) => {
+    fs.appendFile('log.txt', `${new Date().toISOString()}: ${data}\n`, (err) => {
+        if (err) {
+            console.error('Fehler beim Schreiben des Logs:', err);
+        }
+    });
+};
+
 app.get('/sicher/auth', authenticateToken, (req, res) => {
+    logToFile('Authentifizierter Zugriff auf /sicher/auth');
     if (req.user.role !== 'admin') return res.status(403).send('Keine ausreichenden Berechtigungen');
     res.send('Sicherer Authentifizierungs- und Autorisierungsendpunkt');
 });
@@ -73,28 +75,35 @@ app.get('/sicher/auth', authenticateToken, (req, res) => {
 app.post('/login', bodyParser.json(), (req, res) => {
     const { username, password } = req.body;
 
-    // Überprüfen Sie die Gültigkeit von Benutzername und Passwort
     if (!isValidInput(username) || !isValidInput(password)) {
+        logToFile(`Ungültige Benutzername oder Passwort: ${username}`);
         return res.status(400).send('Ungültige Benutzername oder Passwort');
     }
 
     const user = users.find(u => u.username === username);
 
-    if (!user) return res.status(401).send('Ungültige Anmeldeinformationen');
+    if (!user) {
+        logToFile(`Ungültige Anmeldeinformationen für Benutzer: ${username}`);
+        return res.status(401).send('Ungültige Anmeldeinformationen');
+    }
 
     bcrypt.compare(password, user.hashedPassword, (err, result) => {
         if (result) {
+            logToFile(`Erfolgreiche Anmeldung für Benutzer: ${username}`);
             const token = jwt.sign({ id: user.id, username: user.username, role: user.role }, secretKey);
             res.json({ token });
         } else {
+            logToFile(`Fehlgeschlagene Anmeldung für Benutzer: ${username}`);
             res.status(401).send('Ungültige Anmeldeinformationen');
         }
     });
 });
 
 app.get('/example', (req, res) => {
+    logToFile('Anfrage an /example');
     res.send('Diese Route erlaubt nur Anfragen von https://david-bischof.ch.');
 });
+
 app.listen(port, () => {
     console.log(`Server läuft auf http://localhost:${port}`);
 });
