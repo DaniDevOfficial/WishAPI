@@ -2,3 +2,16 @@
 2024-01-15T12:22:02.193Z: Erfolgreiche Anmeldung für Benutzer: admin
 2024-01-15T12:22:07.671Z: Ungültige Benutzername oder Passwort: !@#$
 2024-01-15T14:32:35.890Z: Anfrage an /example
+2024-01-16T06:48:11.804Z: Erfolgreiche Anmeldung für Benutzer: admin
+2024-01-16T06:48:18.519Z: Authentifizierter Zugriff auf /sicher/auth
+2024-01-16T06:48:57.002Z: Anfrage an /example
+2024-01-16T06:59:05.713Z: Anfrage an /example
+2024-01-16T08:55:23.172Z: Erfolgreiche Anmeldung für Benutzer: admin
+2024-01-16T09:26:21.707Z: Anfrage an /example
+2024-01-16T10:03:33.971Z: Ungültige Benutzername oder Passwort: ' OR '1'='1' --
+2024-01-16T10:03:35.341Z: Ungültige Benutzername oder Passwort: ' OR '1'='1' --
+2024-01-16T10:03:36.410Z: Rate limit exceeded 
+2024-01-16T10:03:37.690Z: Rate limit exceeded 
+2024-01-16T10:04:18.886Z: Rate limit exceeded 
+2024-01-16T10:04:26.475Z: Rate limit exceeded 
+2024-01-16T10:04:28.066Z: Rate limit exceeded 

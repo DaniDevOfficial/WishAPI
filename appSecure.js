@@ -34,6 +34,10 @@ const apiLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 100,
     message: 'Zu viele Anfragen von dieser IP, bitte versuchen Sie es später erneut.',
+    handler: (req, res) => {
+        logToFile(`Rate limit exceeded`);
+        res.status(429).send('Zu viele Anfragen von dieser IP, bitte versuchen Sie es später erneut.');
+    },
 });
 
 app.use(apiLimiter);
